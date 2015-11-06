@@ -1,0 +1,5 @@
+<?php 
+
+// AJAX logic here
+
+?>
