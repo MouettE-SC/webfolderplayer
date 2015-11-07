@@ -1,5 +1,7 @@
 <?php
 
-$music_root = "C:/Users/charles.leclerc/Music";
+$ext = array("mp3", "ogg");
+
+$music_root = "D:/Charles/Musique";
 
 ?>
