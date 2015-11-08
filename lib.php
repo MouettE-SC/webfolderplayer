@@ -1,28 +1,77 @@
 <?php 
 
-function refreshFolder($db, $id, $fpath, $rpath) {
-	global $ext;
-	$db->exec("delete from folder where parent=".$id);
+
+function removeDBFolder($id) {
+	global $db;
+	
 	$db->exec("delete from file where parent=".$id);
+	
+	$d_list = array();
+	
+	foreach($db->query("select id from folder where parent=".$id) as $row)
+		$d_list[] = $row['id'];
+	
+	foreach($d_list as $sid)
+		removeDBFolder($sid);
+	
+	$db->exec("delete from folder where id=".$id);
+}
+
+function syncFolder($id, $fpath, $rpath, $recursive) {
+	global $db, $ext;
+	
 	
 	$ins_folder = $db->prepare("insert into folder (parent, path, name) values (?,?,?)");
 	$ins_file =   $db->prepare("insert into file   (parent, name) values (?,?)");
+	$rm_file  =   $db->prepare("delete from file where id=?");
+	
+	$r_folders = array();
+	$r_files = array();
 	
 	if ($handle = opendir($fpath)) {
 		while (false !== ($entry = readdir($handle))) {
 			if ($entry[0] == '.')
 				continue;
 			$efpath = $fpath.$entry;
-			$erpath = $rpath.$entry;
 			if (is_dir($efpath)) {
-				$ins_folder->execute(array($id, $erpath.'/', $entry));
+				$r_folders[] = $entry;
 			} else if (is_file($efpath)) {
 				if ( in_array(pathinfo($efpath, PATHINFO_EXTENSION), $ext) )
-					$ins_file->execute(array($id, $entry));
+					$r_files[] = $entry;
 			}
 		}
 		closedir($handle);
 	}
+	
+	$d_folders = array();
+	$d_files = array();
+	
+	foreach($db->query("select id, name from folder where parent=".$id) as $row)
+		$d_folders[$row['id']] = $row['name']; 
+	
+	foreach($db->query("select id, name from file where parent=".$id) as $row)
+		$d_files[$row['id']] = $row['name'];
+	
+	$d_remove = array();
+	$d_add = array();
+	$f_remove = array();
+	$f_add = array();
+
+	foreach($r_folders as $r_dir)
+		if (! array_key_exists($r_dir, $d_folders))
+			$ins_folder->execute(array($id, $rpath.$r_dir.'/', $r_dir));
+	
+	foreach($r_files as $r_file)
+		if (! array_key_exists($r_file, $d_file))
+			$ins_file->execute(array($id, $r_file));
+	
+	foreach($d_folders as $d_id => $d_dir)
+		if(! in_array($d_dir, $r_folders))
+			removeDBFolder($d_id);
+	
+	foreach($d_files as $d_fid => $d_file)
+		if(! in_array($d_file, $r_files))
+			$rm_file->exec(array($d_fid));
 	
 	$db->exec("update folder set refresh=".time()." where id=".$id);
 }
@@ -58,7 +107,7 @@ try {
 			$fpath = $music_root.$rpath;
 			
 			if ($refresh == 0)
-				refreshFolder($db, $id, $fpath, $rpath);
+				syncFolder($id, $fpath, $rpath);
 			
 			$files = array();
 			$dirs = array();
