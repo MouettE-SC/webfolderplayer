@@ -1,5 +1,11 @@
 <?php 
 
+function convertName($raw_name) {
+	if (strtoupper(substr(php_uname('s'), 0, 3)) === 'WIN')
+		return mb_convert_encoding($raw_name, "UTF-8", "CP1252");
+	else
+		return $raw_name;
+}
 
 function removeDBFolder($id) {
 	global $db;
@@ -21,8 +27,8 @@ function syncFolder($id, $fpath, $rpath, $recursive) {
 	global $db, $ext;
 	
 	
-	$ins_folder = $db->prepare("insert into folder (parent, path, name) values (?,?,?)");
-	$ins_file =   $db->prepare("insert into file   (parent, name) values (?,?)");
+	$ins_folder = $db->prepare("insert into folder (parent, raw_path, raw_name, name) values (?,?,?, ?)");
+	$ins_file =   $db->prepare("insert into file   (parent, raw_name, name) values (?,?, ?)");
 	$rm_file  =   $db->prepare("delete from file where id=?");
 	
 	$r_folders = array();
@@ -46,11 +52,11 @@ function syncFolder($id, $fpath, $rpath, $recursive) {
 	$d_folders = array();
 	$d_files = array();
 	
-	foreach($db->query("select id, name from folder where parent=".$id) as $row)
-		$d_folders[$row['id']] = $row['name']; 
+	foreach($db->query("select id, raw_name from folder where parent=".$id) as $row)
+		$d_folders[$row['id']] = $row['raw_name']; 
 	
-	foreach($db->query("select id, name from file where parent=".$id) as $row)
-		$d_files[$row['id']] = $row['name'];
+	foreach($db->query("select id, raw_name from file where parent=".$id) as $row)
+		$d_files[$row['id']] = $row['raw_name'];
 	
 	$d_remove = array();
 	$d_add = array();
@@ -59,11 +65,11 @@ function syncFolder($id, $fpath, $rpath, $recursive) {
 
 	foreach($r_folders as $r_dir)
 		if (! array_key_exists($r_dir, $d_folders))
-			$ins_folder->execute(array($id, $rpath.$r_dir.'/', $r_dir));
+			$ins_folder->execute(array($id, $rpath.$r_dir.'/', $r_dir, convertName($r_dir)));
 	
 	foreach($r_files as $r_file)
-		if (! array_key_exists($r_file, $d_file))
-			$ins_file->execute(array($id, $r_file));
+		if (! array_key_exists($r_file, $d_files))
+			$ins_file->execute(array($id, $r_file, convertName($r_file)));
 	
 	foreach($d_folders as $d_id => $d_dir)
 		if(! in_array($d_dir, $r_folders))
@@ -84,9 +90,9 @@ try {
 	$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 	if (!$init) {
-		$db->exec("create table folder (id integer primary key, parent integer, path text, name text, refresh integer default 0)");
-		$db->exec("insert into  folder (path, name) values ('/', '_root_')");
-		$db->exec("create table file (id integer primary key, parent integer, name text)");
+		$db->exec("create table folder (id integer primary key, parent integer, raw_path text, raw_name text, name text, refresh integer default 0)");
+		$db->exec("insert into  folder (raw_path, raw_name, name) values ('/', '_root_', '_root_')");
+		$db->exec("create table file (id integer primary key, parent integer, raw_name text, name text)");
 	}
 	
 	if ( isset($_POST['action'])) {
@@ -95,19 +101,20 @@ try {
 		case "dir":
 			if ( ! isset($_POST['id']) || ! is_numeric($_POST['id']))
 				throw new Exception('Invalid or unspecified folder ID');
+				
 			$id = $_POST['id'];
-			$rs = $db->query("select count(*) as n, path, name, refresh from folder where id=".$id)->fetchAll();
+			$rs = $db->query("select count(*) as n, parent, raw_path, refresh from folder where id=".$id)->fetchAll();
 			
 			if ($rs[0]['n'] == 0)
 				throw new Exception('Invalid folder ID');
 			
-			$name = $rs[0]['name'];
+			$parent = $rs[0]['parent'];
 			$refresh = $rs[0]['refresh'];
-			$rpath = $rs[0]['path'];
+			$rpath = $rs[0]['raw_path'];
 			$fpath = $music_root.$rpath;
 			
 			if ($refresh == 0)
-				syncFolder($id, $fpath, $rpath);
+				syncFolder($id, $fpath, $rpath, false);
 			
 			$files = array();
 			$dirs = array();
@@ -118,7 +125,7 @@ try {
 			foreach ($db->query('select id,name from file where parent='.$id.' order by lower(name)') as $row)
 				$files[] = array("id" => $row['id'], "name" => $row['name']);
 			
-			exit(json_encode(array('result' => true, 'dirs' => $dirs, 'files' => $files)));
+			exit(json_encode(array('result' => true, 'parent' => $parent, 'dirs' => $dirs, 'files' => $files)));
 			break;
 		}
 	}
@@ -126,7 +133,7 @@ try {
 } catch (Exception $e) {
 	if ( isset($_POST['action'])) {
 		header("Content-type: text/javascript");
-		echo json_encode(array('result' => false, 'msg' => $e->getMessage()));
+		echo json_encode(array('result' => false, 'msg' => "<pre>".$e->getMessage()."\n".$e->getTraceAsString()."</pre>"));
 		exit;
 	} else {
 		die("<pre>Error : ".$e->getMessage()."\n".$e->getTraceAsString()."</pre>");

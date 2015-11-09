@@ -26,16 +26,16 @@ require("lib.php");
   <meta charset="UTF-8">
   <title>WebFolderPlayer</title>
   <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="css/font-awesome.min.css">
+  <link rel="stylesheet" type="text/css" href="css/wfp.css">
 </head>
 <body>
 <div class="container">
   <div class="row">
     <div class="col-md-8">
       <h2>Folders</h2>
-      <ol class="breadcrumb" id="folders-bc">
-        <li class="active">Home</li>
-      </ol>
-      <ul class="list-group"></ul>
+      <ol class="breadcrumb" id="folders-bc"></ol>
+      <ul class="list-group" id="folders-list"></ul>
     </div>
     <div class="col-md-4">
       <h2>Playlist</h2>
