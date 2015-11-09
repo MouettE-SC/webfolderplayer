@@ -3,7 +3,7 @@ $(function() {
 });
 
 function dclick(e) {
-	changeDir(e.dataset.id, e.dataset.name, false);
+	changeDir(e.dataset.id, e.dataset.name);
 }
 
 function updateBC(id, name) {
@@ -56,14 +56,19 @@ function changeDir(id, name) {
 			} else {
 				d_folders.empty();
 				if (id != 1)
-					d_folders.append('<button onclick="dclick(this)" class="list-group-item f-directory" data-id="'+data.parent+'" data-name=".."><span class="fa fa-level-up" aria-hidden="true"></span>&nbsp;..</button>');;
+					d_folders.append('<div onclick="dclick(this)" class="list-group-item f-directory" data-id="'+data.parent+'" data-name=".."><span class="fa fa-level-up" aria-hidden="true"></span>&nbsp;..</button>');
 				data.dirs.map(function(d){
-					d_folders.append('<button onclick="dclick(this)" class="list-group-item f-directory" data-id="'+d.id+'" data-name="'+d.name+'"><span class="fa fa-folder-open" aria-hidden="true"></span>&nbsp;'+d.name+'</button>');;
+					d_folders.append('<div onclick="dclick(this)" class="list-group-item f-directory" data-id="'+d.id+'" data-name="'+d.name+'"><span class="fa fa-folder-open" aria-hidden="true"></span>&nbsp;'+d.name+'<button type="button" class="btn btn-default btn-xs pull-right hidden"><span class="fa fa-play" aria-hidden="true"></span></button></div>');
 				});
 				data.files.map(function(f){
-					d_folders.append('<div class="list-group-item f-file" data-id="'+f.id+'"><span class="fa fa-music" aria-hidden="true"></span>&nbsp;'+f.name+'</div>');;
+					d_folders.append('<div class="list-group-item f-file" data-id="'+f.id+'"><span class="fa fa-music" aria-hidden="true"></span>&nbsp;'+f.name+'<button type="button" class="btn btn-default btn-xs pull-right hidden"><span class="fa fa-play" aria-hidden="true"></span></button></div>');
 				});
 			}
+			d_folders.children("div,button").hover(function() {
+				$(this).children("button").removeClass("hidden");
+			}, function() {
+				$(this).children("button").addClass("hidden");
+			})
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
 			alert("There was an error while communicating with server : ["+jqXHR.status+"] "+errorThrown);

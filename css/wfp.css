@@ -1,3 +1,9 @@
-span.glyphicon {
-	margin-right: 10px;
+div.f-directory:hover {
+	background-color: #f5f5f5;
+	cursor: pointer;
 }
+
+div.f-file:hover {
+	background-color: #f5f5f5;
+}
+
