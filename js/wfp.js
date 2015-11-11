@@ -1,5 +1,18 @@
 $(function() {
-	changeDir(1, "Home");
+	$("#jplayer").jPlayer({
+		ready: function () {
+			changeDir(1, "Home");
+		},
+		cssSelectorAncestor: "#jplayer_container",
+		swfPath: "js",
+		supplied: "oga, mp3",
+		useStateClassSkin: true,
+		autoBlur: false,
+		smoothPlayBar: true,
+		keyEnabled: true,
+		remainingDuration: true,
+		toggleDuration: true
+	});
 });
 
 function dclick(e) {
