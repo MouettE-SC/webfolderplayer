@@ -1,12 +1,12 @@
 <?php
 
 # [mandatory] Array of file extensions that will appear in the browser panel
-
 $ext = array("mp3", "ogg");
 
+# [optional] Array of files/dir to exlude from browsing
+#$exclude = array();
 
 # [mandatory] Root directory of music library
-
 #$music_root = "";
 
 ?>

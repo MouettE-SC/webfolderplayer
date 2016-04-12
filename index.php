@@ -7,6 +7,9 @@ if ( ! isset($music_root) ) {
 	exit;
 }
 
+if ( ! isset($exclude))
+	$exclude = array();
+
 if ( ! is_dir($music_root)) {
 	echo "$music_root is not a directory !";
 	exit;

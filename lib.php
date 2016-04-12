@@ -24,7 +24,7 @@ function removeDBFolder($id) {
 }
 
 function syncFolder($id, $fpath, $rpath, $recursive) {
-	global $db, $ext;
+	global $db, $ext, $exclude;
 	
 	
 	$ins_folder = $db->prepare("insert into folder (parent, raw_path, raw_name, name) values (?,?,?, ?)");
@@ -37,6 +37,8 @@ function syncFolder($id, $fpath, $rpath, $recursive) {
 	if ($handle = opendir($fpath)) {
 		while (false !== ($entry = readdir($handle))) {
 			if ($entry[0] == '.')
+				continue;
+			if (in_array($entry, $exclude))
 				continue;
 			$efpath = $fpath.$entry;
 			if (is_dir($efpath)) {
@@ -79,7 +81,7 @@ function syncFolder($id, $fpath, $rpath, $recursive) {
 		if(! in_array($d_file, $r_files))
 			$rm_file->exec(array($d_fid));
 	
-	$db->exec("update folder set refresh=".time()." where id=".$id);
+	$db->exec("update folder set last_modified=".filemtime($fpath.".")." where id=".$id);
 }
 
 
@@ -90,7 +92,7 @@ try {
 	$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 	if (!$init) {
-		$db->exec("create table folder (id integer primary key, parent integer, raw_path text, raw_name text, name text, refresh integer default 0)");
+		$db->exec("create table folder (id integer primary key, parent integer, raw_path text, raw_name text, name text, last_modified integer default 0)");
 		$db->exec("insert into  folder (raw_path, raw_name, name) values ('/', '_root_', '_root_')");
 		$db->exec("create table file (id integer primary key, parent integer, raw_name text, name text)");
 	}
@@ -103,17 +105,17 @@ try {
 				throw new Exception('Invalid or unspecified folder ID');
 				
 			$id = $_POST['id'];
-			$rs = $db->query("select count(*) as n, parent, raw_path, refresh from folder where id=".$id)->fetchAll();
+			$rs = $db->query("select count(*) as n, parent, raw_path, last_modified from folder where id=".$id)->fetchAll();
 			
 			if ($rs[0]['n'] == 0)
 				throw new Exception('Invalid folder ID');
 			
 			$parent = $rs[0]['parent'];
-			$refresh = $rs[0]['refresh'];
+			$last_modified = $rs[0]['last_modified'];
 			$rpath = $rs[0]['raw_path'];
 			$fpath = $music_root.$rpath;
 			
-			if ($refresh == 0)
+			if ($last_modified < filemtime($fpath."."))
 				syncFolder($id, $fpath, $rpath, false);
 			
 			$files = array();
