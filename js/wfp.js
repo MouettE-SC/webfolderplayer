@@ -1,17 +1,24 @@
 $(function() {
+	Split(['#a-left', '#a-right'], {
+        sizes: [66, 34],
+        minSize: 200,
+        gutterSize: 5
+    });
 	$("#jplayer").jPlayer({
 		ready: function () {
 			changeDir(1, "Home");
 		},
-		cssSelectorAncestor: "#jplayer_container",
+		cssSelectorAncestor: "",
+		cssSelector: {
+			title: "#title",
+		    play: "#play",
+		    pause: "#pause",
+		    stop: "#stop",
+		    currentTime: "#currentTime",
+		    duration: "#duration"
+		},
 		swfPath: "js",
-		supplied: "oga, mp3",
-		useStateClassSkin: true,
-		autoBlur: false,
-		smoothPlayBar: true,
-		keyEnabled: true,
-		remainingDuration: true,
-		toggleDuration: true
+		supplied: "oga, mp3"
 	});
 });
 

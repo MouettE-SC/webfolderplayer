@@ -1,9 +1,80 @@
+* {
+    margin: 0;
+}
+
+html, body {
+    height: 100%;
+}
+
+.split {
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
+  overflow-y: hidden;
+  overflow-x: hidden;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.gutter {
+  background-color: #eee;
+  background-repeat: no-repeat;
+  background-position: 50%;
+}
+
+.gutter.gutter-horizontal {
+  background-image: url('grips/vertical.png');
+  cursor: col-resize;
+}
+
+.split.split-horizontal, .gutter.gutter-horizontal {
+  height: 100%;
+  float: left;
+}
+
+.eb-select {
+    border: 1px solid #ddd; 
+    border-radius: 4px;
+    height: calc(100% - 139px);
+}
+
+.eb-select > .list-group {
+    height: 100%;
+    overflow-y: auto;
+    margin: 0
+}
+
+.eb-select > .list-group > .list-group-item {
+    margin-top: -1px;
+    border-right: 0;
+    border-left: 0;
+}
+
+.eb-select > .list-group > .list-group-item:first-child {
+    border-top-right-radius: 0px;
+    border-top: 0px;
+}
+
+.eb-select > .list-group > .list-group-item:last-child {
+    border-bottom-right-radius: 0px;
+    /*border-bottom: 0px;*/
+}
+
+li.list-group-item:hover {
+    background-color: #f5f5f5;
+}
+
 div.f-directory:hover {
-	background-color: #f5f5f5;
-	cursor: pointer;
+    background-color: #f5f5f5;
+    cursor: pointer;
 }
 
 div.f-file:hover {
-	background-color: #f5f5f5;
+    background-color: #f5f5f5;
+}
+
+/* Player */
+div.title {
+	display: block;
 }
 
